@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico - App Siniestros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976D2;
+            margin-bottom: 20px;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #1976D2;
+            background: #f8f9fa;
+        }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .loading { border-left-color: #ffc107; background: #fff3cd; }
+        button {
+            background: #1976D2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #1565C0;
+        }
+        .code {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnóstico - App de Siniestros</h1>
+        <p><strong>URL Actual:</strong> <span id="currentUrl"></span></p>
+        
+        <button onclick="runTests()">🚀 Ejecutar Pruebas</button>
+        
+        <div id="test1" class="test loading">
+            <strong>1. Conexión a Firebase</strong>
+            <div id="result1">⏳ Esperando...</div>
+        </div>
+        
+        <div id="test2" class="test loading">
+            <strong>2. Lectura de Comunidades</strong>
+            <div id="result2">⏳ Esperando...</div>
+        </div>
+        
+        <div id="test3" class="test loading">
+            <strong>3. Lectura de Claims</strong>
+            <div id="result3">⏳ Esperando...</div>
+        </div>
+        
+        <div id="summary" style="margin-top: 30px; display: none;">
+            <h2>📊 Resumen</h2>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        document.getElementById('currentUrl').textContent = window.location.hostname;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1lA2TnGbYOqJwqvBU8l6Z9F6gkbqFZBc",
+            appId: "1:461936537433:web:38a16e6e84d0e2fa4ca826",
+            messagingSenderId: "461936537433",
+            projectId: "rps-claim-manager-1f250",
+            authDomain: "rps-claim-manager-1f250.firebaseapp.com",
+            storageBucket: "rps-claim-manager-1f250.firebasestorage.app"
+        };
+
+        let results = { firebase: false, comunidades: false, claims: false };
+
+        window.runTests = async function() {
+            try {
+                // Test 1: Firebase
+                const test1 = document.getElementById('test1');
+                const result1 = document.getElementById('result1');
+                result1.textContent = '⏳ Inicializando Firebase...';
+                
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                
+                result1.innerHTML = '✅ Firebase inicializado correctamente<br><div class="code">apiKey: AIzaSyB1lA...c</div>';
+                test1.className = 'test success';
+                results.firebase = true;
+
+                // Test 2: Comunidades
+                const test2 = document.getElementById('test2');
+                const result2 = document.getElementById('result2');
+                result2.textContent = '⏳ Leyendo comunidades...';
+                
+                try {
+                    const snapshot = await getDocs(collection(db, 'comunidades'));
+                    const count = snapshot.size;
+                    
+                    if (count > 0) {
+                        let html = `✅ ${count} comunidades encontradas:<br><ul style="margin: 10px 0;">`;
+                        snapshot.docs.slice(0, 5).forEach(doc => {
+                            const data = doc.data();
+                            html += `<li><strong>${data.nombre || 'Sin nombre'}</strong> - ${data.direccion || ''}</li>`;
+                        });
+                        html += '</ul>';
+                        result2.innerHTML = html;
+                        test2.className = 'test success';
+                        results.comunidades = true;
+                    } else {
+                        result2.innerHTML = '⚠️ La colección existe pero está vacía';
+                        test2.className = 'test error';
+                    }
+                } catch (e) {
+                    result2.innerHTML = `❌ Error: ${e.code || e.message}<br><br>
+                        <strong>Posibles causas:</strong><br>
+                        1. Reglas de Firestore sin permisos<br>
+                        2. API Key incorrecta<br>
+                        3. Dominio no autorizado`;
+                    test2.className = 'test error';
+                }
+
+                // Test 3: Claims
+                const test3 = document.getElementById('test3');
+                const result3 = document.getElementById('result3');
+                result3.textContent = '⏳ Leyendo claims...';
+                
+                try {
+                    const snapshot = await getDocs(collection(db, 'claims'));
+                    result3.textContent = `✅ ${snapshot.size} siniestros encontrados`;
+                    test3.className = 'test success';
+                    results.claims = true;
+                } catch (e) {
+                    result3.textContent = `❌ Error: ${e.message}`;
+                    test3.className = 'test error';
+                }
+
+                showSummary();
+            } catch (error) {
+                console.error('Error general:', error);
+                alert('Error: ' + error.message);
+            }
+        };
+
+        function showSummary() {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            
+            const passed = Object.values(results).filter(r => r === true).length;
+            const total = Object.keys(results).length;
+            
+            let html = `<strong>Pruebas pasadas: ${passed}/${total}</strong><br><br>`;
+            
+            if (passed === total) {
+                html += '<div class="test success">✅ Todo funciona correctamente. El problema puede estar en la app Flutter.</div>';
+            } else {
+                html += '<div class="test error">❌ Hay problemas de configuración de Firebase.</div>';
+            }
+            
+            content.innerHTML = html;
+            summary.style.display = 'block';
+        }
+
+        // Auto-ejecutar
+        setTimeout(() => window.runTests(), 500);
+    </script>
+</body>
+</html>
