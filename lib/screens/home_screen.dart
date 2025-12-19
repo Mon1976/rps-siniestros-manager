@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/claim.dart';
 import '../services/firebase_service.dart';
 import 'claim_detail_screen.dart';
-import 'new_claim_screen.dart';
+import 'new_claim_screen_v2.dart';
 import 'listados_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const NewClaimScreen(),
+              builder: (context) => const NewClaimScreenV2(),
             ),
           );
         },
