@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector de Comunidades - Firebase</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #4ec9b0; }
+        .comunidad {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .field {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .field-name {
+            color: #9cdcfe;
+            font-weight: bold;
+        }
+        .null { color: #f48771; }
+        .string { color: #ce9178; }
+        .number { color: #b5cea8; }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .summary {
+            background: #264f78;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .json-view {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Inspector de Datos de Comunidades</h1>
+    <button onclick="inspeccionar()">▶️ Inspeccionar Comunidades</button>
+    
+    <div id="resumen" class="summary" style="display:none;">
+        <h2>📊 Resumen</h2>
+        <div id="resumenContent"></div>
+    </div>
+    
+    <div id="resultados"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1lA2TnGbYOqJwqvBU8l6Z9F6gkbqFZBc",
+            projectId: "rps-claim-manager-1f250"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.inspeccionar = async function() {
+            const resultados = document.getElementById('resultados');
+            const resumen = document.getElementById('resumen');
+            const resumenContent = document.getElementById('resumenContent');
+            
+            resultados.innerHTML = '<p>⏳ Cargando datos...</p>';
+            
+            try {
+                const snapshot = await getDocs(collection(db, 'comunidades'));
+                
+                let html = '';
+                let problemas = {
+                    nombreNull: 0,
+                    direccionNull: 0,
+                    ciudadNull: 0,
+                    codigoPostalNull: 0
+                };
+                
+                snapshot.docs.forEach((doc, index) => {
+                    const data = doc.data();
+                    
+                    html += `<div class="comunidad">`;
+                    html += `<h3>📄 Comunidad #${index + 1}: ${doc.id}</h3>`;
+                    
+                    // Verificar cada campo
+                    const campos = ['nombre', 'direccion', 'ciudad', 'codigoPostal', 'telefono', 'email', 
+                                    'companiaAseguradora', 'numeroPoliza'];
+                    
+                    campos.forEach(campo => {
+                        const valor = data[campo];
+                        const tipo = typeof valor;
+                        let clase = 'string';
+                        let valorTexto = '';
+                        
+                        if (valor === null || valor === undefined) {
+                            clase = 'null';
+                            valorTexto = 'NULL ❌';
+                            if (campo === 'nombre') problemas.nombreNull++;
+                            if (campo === 'direccion') problemas.direccionNull++;
+                            if (campo === 'ciudad') problemas.ciudadNull++;
+                            if (campo === 'codigoPostal') problemas.codigoPostalNull++;
+                        } else if (valor === '') {
+                            clase = 'string';
+                            valorTexto = "'' (cadena vacía)";
+                        } else if (tipo === 'string') {
+                            clase = 'string';
+                            valorTexto = `"${valor}"`;
+                        } else {
+                            clase = tipo;
+                            valorTexto = JSON.stringify(valor);
+                        }
+                        
+                        html += `<div class="field">`;
+                        html += `<span class="field-name">${campo}:</span> `;
+                        html += `<span class="${clase}">${valorTexto}</span>`;
+                        html += `</div>`;
+                    });
+                    
+                    // Mostrar JSON completo
+                    html += `<br><strong>Estructura JSON completa:</strong>`;
+                    html += `<div class="json-view">${JSON.stringify(data, null, 2)}</div>`;
+                    html += `</div>`;
+                });
+                
+                // Mostrar resumen
+                let resumenHtml = `<strong>Total de comunidades:</strong> ${snapshot.size}<br><br>`;
+                resumenHtml += `<strong>🚨 Problemas detectados:</strong><br>`;
+                resumenHtml += `- Comunidades con 'nombre' NULL: ${problemas.nombreNull}<br>`;
+                resumenHtml += `- Comunidades con 'direccion' NULL: ${problemas.direccionNull}<br>`;
+                resumenHtml += `- Comunidades con 'ciudad' NULL: ${problemas.ciudadNull}<br>`;
+                resumenHtml += `- Comunidades con 'codigoPostal' NULL: ${problemas.codigoPostalNull}<br>`;
+                
+                resumenContent.innerHTML = resumenHtml;
+                resumen.style.display = 'block';
+                resultados.innerHTML = html;
+                
+            } catch (error) {
+                resultados.innerHTML = `<div class="comunidad" style="background: #5a1d1d;">
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        };
+    </script>
+</body>
+</html>
