@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verificar Afectados en Siniestros</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .siniestro {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .tiene-afectado {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        .sin-afectado {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        h2 { color: #1976D2; }
+        .campo { margin: 5px 0; }
+        .label { font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Verificar Afectados en Siniestros</h1>
+    <div id="resultado">Cargando...</div>
+
+    <script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: 'AIzaSyDfAVsv5Mz8COqTem5E-KkbFaW92pvvBfo',
+            projectId: 'rps-claim-manager-1f250',
+            authDomain: 'rps-claim-manager-1f250.firebaseapp.com',
+            storageBucket: 'rps-claim-manager-1f250.firebasestorage.app',
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function verificarAfectados() {
+            try {
+                const snapshot = await db.collection('claims').get();
+                
+                let html = `<h2>📊 Total de siniestros: ${snapshot.size}</h2>`;
+                
+                let conAfectado = 0;
+                let sinAfectado = 0;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tieneAfectado = data.afectadoNombre && data.afectadoNombre.trim() !== '';
+                    
+                    if (tieneAfectado) {
+                        conAfectado++;
+                    } else {
+                        sinAfectado++;
+                    }
+                    
+                    const clase = tieneAfectado ? 'tiene-afectado' : 'sin-afectado';
+                    
+                    html += `
+                        <div class="siniestro ${clase}">
+                            <div class="campo">
+                                <span class="label">ID:</span> ${doc.id}
+                            </div>
+                            <div class="campo">
+                                <span class="label">Tipo:</span> ${data.tipoSiniestro || 'N/A'}
+                            </div>
+                            <div class="campo">
+                                <span class="label">Comunidad:</span> ${data.comunidadNombre || 'N/A'}
+                            </div>
+                            <div class="campo">
+                                <span class="label">👤 Afectado:</span> 
+                                ${tieneAfectado ? 
+                                    `<strong style="color: green;">✅ ${data.afectadoNombre}</strong>` : 
+                                    `<strong style="color: red;">❌ No tiene afectado</strong>`
+                                }
+                            </div>
+                            <div class="campo">
+                                <span class="label">Teléfono Afectado:</span> ${data.afectadoTelefono || 'N/A'}
+                            </div>
+                            <div class="campo">
+                                <span class="label">Email Afectado:</span> ${data.afectadoEmail || 'N/A'}
+                            </div>
+                            <div class="campo">
+                                <span class="label">Piso Afectado:</span> ${data.afectadoPiso || 'N/A'}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html = `
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3>📈 Resumen:</h3>
+                        <p>✅ Con afectado: <strong>${conAfectado}</strong></p>
+                        <p>❌ Sin afectado: <strong>${sinAfectado}</strong></p>
+                    </div>
+                ` + html;
+                
+                document.getElementById('resultado').innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = 
+                    `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        verificarAfectados();
+    </script>
+</body>
+</html>
