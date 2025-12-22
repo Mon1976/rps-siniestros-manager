@@ -338,6 +338,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 4),
+              // Afectado (NUEVO)
+              if (claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Icon(Icons.person, size: 12, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        claim.afectadoNombre!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+              ],
               // Fecha
               Row(
                 children: [
@@ -511,6 +533,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 8),
+              // Afectado (NUEVO)
+              if (claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    const Icon(Icons.person, size: 16, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Afectado: ${claim.afectadoNombre}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
               Row(
                 children: [
                   const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
