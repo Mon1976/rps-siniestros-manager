@@ -338,15 +338,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 4),
-              // Afectado (NUEVO)
-              if (claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ...[
+              // Contacto/Afectado (MODIFICADO)
+              if ((claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ||
+                  (claim.contactoNombre != null && claim.contactoNombre!.isNotEmpty)) ...[
                 Row(
                   children: [
                     Icon(Icons.person, size: 12, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        claim.afectadoNombre!,
+                        claim.afectadoNombre?.isNotEmpty == true 
+                            ? claim.afectadoNombre!
+                            : claim.contactoNombre ?? '',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey[800],
@@ -533,15 +536,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              // Afectado (NUEVO)
-              if (claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ...[
+              // Contacto/Afectado (MODIFICADO)
+              if ((claim.afectadoNombre != null && claim.afectadoNombre!.isNotEmpty) ||
+                  (claim.contactoNombre != null && claim.contactoNombre!.isNotEmpty)) ...[
                 Row(
                   children: [
                     const Icon(Icons.person, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Afectado: ${claim.afectadoNombre}',
+                        claim.afectadoNombre?.isNotEmpty == true 
+                            ? 'Afectado: ${claim.afectadoNombre}'
+                            : 'Contacto: ${claim.contactoNombre}',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey[700],
