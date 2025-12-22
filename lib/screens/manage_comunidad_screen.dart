@@ -85,7 +85,8 @@ class _ManageComunidadScreenState extends State<ManageComunidadScreen> {
           : _numeroPolizaController.text;
       widget.comunidad!.fechaVencimientoSeguro = _fechaVencimientoSeguro;
 
-      await widget.comunidad!.save();
+      // Actualizar en Firestore
+      await FirebaseService.updateComunidad(widget.comunidad!);
     } else {
       // Crear nueva comunidad
       final comunidad = Comunidad(
@@ -395,8 +396,7 @@ class _ManageComunidadScreenState extends State<ManageComunidadScreen> {
                     context: context,
                     initialDate: _fechaVencimientoSeguro ?? DateTime.now(),
                     firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                    locale: const Locale('es', 'ES'),
+                    lastDate: DateTime(2035),
                     helpText: 'Selecciona fecha de vencimiento',
                     cancelText: 'Cancelar',
                     confirmText: 'Aceptar',
